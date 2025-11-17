@@ -1,0 +1,39 @@
+name: Sync Upstream
+on:
+schedule:
+# 每天 UTC 时间 0 点同步（北京时间 8 点）
+- cron: '0 0 * * *'
+# 可选：手动触发按钮
+workflow_dispatch:
+
+jobs:
+sync:
+runs-on: ubuntu-latest
+steps:
+# 步骤 1：检出你的分支代码
+- name: Checkout
+uses: actions/checkout@v4
+with:
+# 指定你的默认分支（如 main/master）
+ref: 'main'
+
+# 步骤 2：添加上游仓库地址
+- name: Add Upstream Remote
+run: |
+git remote add upstream https://github.com/Alvin9999/new-pac.git
+git fetch upstream
+
+# 步骤 3：合并上游更新（避免冲突时失败）
+- name: Merge Upstream Changes
+run: |
+git config user.name "GitHub Actions"
+git config user.email "actions@users.noreply.github.com"
+git merge upstream/main --allow-unrelated-histories
+
+# 步骤 4：推送更新到你的分支
+- name: Push Changes
+uses: ad-m/github-push-action@v0.6.0
+with:
+# 使用 GitHub Token 推送
+github_token: ${{ secrets.GITHUB_TOKEN }}
+branch: main  # 你的分支名
